@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>此处只有水</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 使用自定义 CSS 确保 Canvas 占满整个视口 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        #lakeCanvas {
+            display: block;
+            background-color: #1491a8; /* 湖水颜色 */
+            cursor: pointer;
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2rem;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1000;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'lake-blue': '#1491a8',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-lake-blue">
+
+    <canvas id="lakeCanvas"></canvas>
+
+    <div id="messageBox" class="message-box">
+        这里只有水！
+    </div>
+
+    <script>
+        // 获取 Canvas 元素和 2D 绘图上下文
+        const canvas = document.getElementById('lakeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 存储所有活跃的涟漪
+        let ripples = [];
+        
+        // 涟漪参数
+        const RIPPLE_DURATION = 1500; // 涟漪持续时间（毫秒）
+        const MAX_RADIUS = 150;       // 涟漪最大半径（像素）
+        const RING_SPACING = 30;      // 同心圆之间的间距（像素）
+
+        // 初始化 Canvas 大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // 每次调整大小时，重新绘制，虽然涟漪会自动重绘
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        /**
+         * 创建一个新的涟漪
+         * @param {number} x - 点击的X坐标
+         * @param {number} y - 点击的Y坐标
+         */
+        function createRipple(x, y) {
+            const maxRings = Math.floor(Math.random() * 3) + 1; // 随机 1, 2, 或 3 圈
+            
+            ripples.push({
+                x: x,
+                y: y,
+                startTime: Date.now(),
+                maxRings: maxRings
+            });
+        }
+
+        // 监听点击事件
+        canvas.addEventListener('click', (e) => {
+            createRipple(e.clientX, e.clientY);
+        });
+
+        /**
+         * 绘制所有涟漪
+         */
+        function drawRipples() {
+            // 清除上一帧的绘制内容
+            // 由于 Canvas 具有背景色 #1491a8，我们只需要清除它
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const now = Date.now();
+            
+            // 过滤掉已经结束的涟漪，并进行绘制
+            ripples = ripples.filter(ripple => {
+                const elapsed = now - ripple.startTime;
+                
+                if (elapsed > RIPPLE_DURATION + (ripple.maxRings - 1) * 300) {
+                    // 最后一个圈已经完成，移除涟漪
+                    return false;
+                }
+
+                // 绘制当前涟漪的所有圈
+                for (let i = 0; i < ripple.maxRings; i++) {
+                    // 每个圈有一个起始时间偏移，模拟错开的波纹
+                    const ringDelay = i * (RIPPLE_DURATION / 5); // 确保圈数越多，持续时间越长
+                    const ringElapsed = elapsed - ringDelay;
+
+                    if (ringElapsed > 0) {
+                        const progress = ringElapsed / RIPPLE_DURATION;
+                        
+                        // 半径从 0 扩大到 MAX_RADIUS
+                        const radius = progress * MAX_RADIUS;
+                        
+                        // 不透明度从 1 渐变到 0
+                        const opacity = Math.max(0, 1 - progress * 1.5); // 稍微加速透明度衰减
+
+                        if (opacity > 0) {
+                            ctx.beginPath();
+                            ctx.arc(ripple.x, ripple.y, radius, 0, Math.PI * 2);
+                            
+                            // 设置线条样式
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                return true; // 保留活跃的涟漪
+            });
+        }
+
+        /**
+         * 主动画循环
+         */
+        function animate() {
+            drawRipples();
+            requestAnimationFrame(animate);
+        }
+
+        // 首次提示用户点击
+        function showInitialMessage() {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.style.opacity = 1;
+            setTimeout(() => {
+                messageBox.style.opacity = 0;
+            }, 3000); // 3秒后淡出提示
+        }
+
+        window.onload = function() {
+            animate();
+            showInitialMessage();
+        }
+    </script>
+</body>
+</html>
