@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale:1.0">
+    <title>Fawtic</title>
+    <style>
+        /* 基本设置 */
+        body {
+            background-color: #000000;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; 
+            overflow: hidden;
+            color: white;
+            padding: 40px 20px; 
+            box-sizing: border-box;
+        }
+        
+        .header-container {
+            text-align: center;
+        }
+
+        /* 标题 */
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            margin-bottom: 0.5rem; 
+            text-shadow: 0 0 10px #fff; 
+        }
+        
+        /* 当前时间 */
+        .page-subtitle {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #888888; /* 灰色文字 */
+            margin: 0;
+        }
+
+        /* 恒星与行星 */
+        .fawtic-system {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: grid;
+            place-items: center;
+        }
+
+        /* 恒星 */
+        .star {
+            width: 30px;
+            height: 30px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 20px #fff, 0 0 40px #fff, 0 0 60px #f0f0f0;
+            z-index: 10; 
+        }
+
+        .orbit {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            animation: revolve linear infinite;
+        }
+
+        /* 行星轨道 */
+        .orbit-1 {
+            width: 120px;
+            height: 120px;
+            animation-duration: 8s; 
+        }
+
+        .orbit-2 {
+            width: 220px;
+            height: 220px;
+            animation-duration: 12s; 
+        }
+
+        .orbit-3 {
+            width: 320px;
+            height: 320px;
+            animation-duration: 18s; 
+        }
+
+        /* 行星 */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            animation: maintain-orientation linear infinite reverse;
+        }
+
+        .planet-1 {
+            width: 10px;
+            height: 10px;
+            background-color: #a4cab6; 
+            top: -5px; 
+            left: 50%;
+            transform: translateX(-50%);
+            animation-duration: 8s; 
+        }
+
+        .planet-2 {
+            width: 14px;
+            height: 14px;
+            background-color: #806d9e;
+            right: -7px; 
+            top: 50%;
+            transform: translateY(-50%);
+            animation-duration: 12s;
+        }
+
+        .planet-3 {
+            width: 12px;
+            height: 12px;
+            background-color: #be7e4a;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-duration: 18s;
+        }
+        
+        /* 动画 */
+        @keyframes revolve {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes maintain-orientation {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(-360deg);
+            }
+        }
+        
+        /* 入口*/
+        .button-container {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: #333;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-note {
+            background-color: #d8b4fe;
+        }
+        
+        .btn-story {
+            background-color: #fef08a;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px; 
+            }
+            .fawtic-system {
+                transform: scale(0.7);
+                margin: 0; 
+            }
+            .page-title {
+                font-size: 2rem;
+            }
+            .page-subtitle {
+                font-size: 0.9rem;
+            }
+            .nav-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1 class="page-title">Fawtic</h1>
+        <p id="current-time" class="page-subtitle"></p>
+    </div>
+
+    <div class="fawtic-system">
+        <div class="star"></div>
+
+        <div class="orbit orbit-1">
+            <div class="planet planet-1"></div>
+        </div>
+
+        <div class="orbit orbit-2">
+            <div class="planet planet-2"></div>
+        </div>
+
+        <div class="orbit orbit-3">
+            <div class="planet planet-3"></div>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <a href="./note/main.html" class="nav-button btn-note">note 页面</a>
+        <a href="./story/main.html" class="nav-button btn-story">story 页面</a>
+    </div>
+
+    <script>
+        function updateTime() {
+            const timeElement = document.getElementById('current-time');
+            if (timeElement) {
+                // 使用 toLocaleString 来获取本地化的日期和时间
+                const now = new Date();
+                timeElement.textContent = now.toLocaleString(undefined, {
+                    dateStyle: 'full',
+                    timeStyle: 'medium'
+                });
+            }
+        }
+        updateTime();
+        // 每秒更新一次时间
+        setInterval(updateTime, 1000);
+    </script>
+
+</body>
+</html>
+
